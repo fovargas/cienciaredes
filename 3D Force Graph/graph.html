@@ -1,0 +1,47 @@
+<head>
+  <style> body { margin: 0; } </style>
+  <script src="https://unpkg.com/3d-force-graph"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.8/xlsx.full.min.js"></script>
+</head>
+
+<body>
+  <div id="3d-graph"></div>
+  <input type="file" id="nodesFile" onchange="loadExcelData('nodes')">
+  <input type="file" id="linksFile" onchange="loadExcelData('links')">
+
+  <script>
+    let nodesData = [];
+    let linksData = [];
+
+    function loadExcelData(type) {
+      const fileInput = type === 'nodes' ? document.getElementById('nodesFile') : document.getElementById('linksFile');
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        const data = e.target.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+
+        if (type === 'nodes') {
+          nodesData = XLSX.utils.sheet_to_json(sheet);
+        } else {
+          linksData = XLSX.utils.sheet_to_json(sheet);
+        }
+
+        if (nodesData.length > 0 && linksData.length > 0) {
+          renderGraph();
+        }
+      };
+
+      reader.readAsBinaryString(file);
+    }
+
+    function renderGraph() {
+      const gData = { nodes: nodesData, links: linksData };
+      const Graph = ForceGraph3D()(document.getElementById('3d-graph')).graphData(gData);
+    }
+  </script>
+</body>
